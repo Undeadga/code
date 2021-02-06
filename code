@@ -45,8 +45,8 @@ print("Server started")
 def client_cmd(conn):
     while True:
         client_send = input("Command for clients: ").encode("utf-8")
-        if not client_send:
-            break
+        while not client_send:
+            client_send = input("Command for clients: ").encode("utf-8")
         for client in CLIENTS.values():
             client.send(client_send)
         data = conn.recv(2048)
